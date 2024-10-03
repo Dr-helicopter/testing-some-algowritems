@@ -1,4 +1,4 @@
-from matrix import Matrix
+from matrix import Matrix , solve_gaussian_linear_system
 
 
 m = Matrix(
@@ -7,9 +7,10 @@ m = Matrix(
           [9, 5],
            )
 a = Matrix(
-    [3, 4, 5],
-          [2, 4, 5])
+    [4, 4, 5],
+          [7, 4, 5],
+          [3, 8, 1])
 
-print(a * m)
 
-print(m * a)
+
+print(solve_gaussian_linear_system(a, ['x', 'y', 'z'], [2, 4, 7]))
