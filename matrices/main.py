@@ -1,9 +1,15 @@
-from matrix import matrix
+from matrix import Matrix
 
 
-m = matrix([4, 0, 7, 3],
-           [0,8,0,0],
-           [9,5,7,0],
-           [2,2,2,9]
+m = Matrix(
+    [4, 0],
+          [0, 8],
+          [9, 5],
            )
-print(m.determinant())
+a = Matrix(
+    [3, 4, 5],
+          [2, 4, 5])
+
+print(a * m)
+
+print(m * a)

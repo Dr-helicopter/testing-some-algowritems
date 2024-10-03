@@ -1,11 +1,12 @@
+from argparse import ArgumentTypeError
 from copy import deepcopy
 from types import GeneratorType
 
-class matrix:
-    def __init__(self, *args):
-        #for generator
-        if isinstance(args[0], GeneratorType): args = list(args[0])
 
+class Matrix:
+    def __init__(self, *args):
+        # for generator
+        if isinstance(args[0], GeneratorType): args = list(args[0])
 
         self.args = []
         self.col = 0
@@ -16,25 +17,27 @@ class matrix:
             if not type(i) is list: raise TypeError(f"Matrices only takes lists entered type :" + str(type(i)))
             if len(i) > self.col: self.col = len(i)
 
-
-
         self.args = list(i + [0] * (self.col - len(i)) for i in args)
 
 
 
-    #getters
-    def get_line(self, i : int):return deepcopy(self.args[i])
-    def get_colum(self, i : int): return deepcopy([a[i] for a in self.args])
+    # getters
+    def get_line(self, i: int): return deepcopy(self.args[i])
+
+    def get_colum(self, i: int): return deepcopy([a[i] for a in self.args])
+
     __getitem__ = get_line
 
 
 
-    #print
+
+    # print
     def print(self):
         for i in self.args:
             for j in i:
                 print(f'{j : 6}', end='')
             print('')
+
     def __str__(self):
         r = ''
         for i in self.args:
@@ -44,36 +47,54 @@ class matrix:
         return r
 
 
+
     # bool
-    def is_squer(self) -> bool: return self.col == self.line
+    def is_squer(self) -> bool:
+        return self.col == self.line
 
 
-    #oppor
-    def multiply_by_number(self,n : float):
+
+    # oppor
+    def multiply_by_number(self, n: float):
         a = []
         for i in self.args:
             a.append([j * n for j in i])
-        return matrix.make_from_list(a)
+        return Matrix.make_from_list(a)
+
+    def multiply_by_matrix(self, m):
+        if type(m) != Matrix: raise ArgumentTypeError("can only take matrix entered type : " + str(type(m)))
+        if self.col != m.line: raise ValueError("the RHS's columns must be equal to  LHS's rows")
+
+        r = []
+        for i in range(self.line):
+            a = []
+            for j in range(m.col):
+                a.append(row_to_column(self.get_line(i), m.get_colum(j)))
+            r.append(a)
+        return Matrix.make_from_list(r)
+
 
 
     def __mul__(self, other):
         if type(other) is int: other = float(other)
         if type(other) is float: return self.multiply_by_number(other)
+        if type(other) is Matrix: return self.multiply_by_matrix(other)
 
 
 
-
-    #deleters
-    def delete_line(self,i):
+    # deletes
+    def delete_line(self, i):
         if i < 0 or i > self.line: raise IndexError("out of bounds")
-        return matrix.make_from_list(remove_from_list(self.args, i))
+        return Matrix.make_from_list(remove_from_list(self.args, i))
 
-    def delete_colum(self,i):
+    def delete_colum(self, i):
         if i < 0 or i > self.col: raise IndexError("out of bounds")
-        return matrix(remove_from_list(a, i) for a in self.args)
+        return Matrix(remove_from_list(a, i) for a in self.args)
 
 
-    #determinant
+
+
+    # determinant
     def determinant(self) -> float:
         if not self.is_squer(): return 0
         line_one = self.get_line(0)
@@ -81,14 +102,17 @@ class matrix:
 
         a = 0
         for i in range(0, self.col):
-            c = line_one[i]*((-1)**(i % 2))
+            c = line_one[i] * ((-1) ** (i % 2))
             m = self.delete_line(0).delete_colum(i)
             a += m.determinant() * c
         return a
 
+
+
+
     @staticmethod
-    def make_from_list(l : list):
-        return matrix(a for a in l)
+    def make_from_list(l: list):
+        return Matrix(a for a in l)
 
 
 
@@ -97,3 +121,9 @@ def remove_from_list(l: list, i: int) -> list:
     r = deepcopy(l)
     r.pop(i)
     return r
+
+def row_to_column(r : list, c : list) -> float:
+    t = 0
+    for a, b in zip(r, c): t += a * b
+    return t
+
