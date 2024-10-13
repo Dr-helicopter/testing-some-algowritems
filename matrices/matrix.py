@@ -106,6 +106,14 @@ class Matrix:
         t = deepcopy(self.args)
         t[a] , t[b] = t[b] , t[a]
         return Matrix.make_from_list(t)
+
+    def swap_colum_with(self, index : int, new_col : list[float]):
+        if index > self.col: raise IndexError("out of bounds")
+        if len(new_col) > self.line: raise IndexError("out of bounds")
+        a = deepcopy(self.args)
+        for i in range(len(self.args)):
+            a[i][index] = new_col[i]
+        return Matrix.make_from_list(a)
     # line and colum operators  ----end-----
 
 
@@ -148,10 +156,18 @@ def solve_gaussian_linear_system(multis : Matrix, vars: list, answers: list):
 
     return extract_from_eliminated(a)
 
+def solve_cramer_linear_system(multis : Matrix, vars: list, answers: list):
+    # checking
+    if len(vars) != len(answers):
+        raise ValueError('too many ' + 'variables' if len(vars) > len(answers) else 'answers')
+    if not multis.is_squer():
+        raise ValueError('coefficient is not squer')
 
-
-
-
+    a = {}
+    for i in range(len(answers)):
+        b = multis.swap_colum_with(i, answers).determinant() /multis.determinant()
+        a[vars[i]] = b
+    return a
 
 # gaussian linear system utils (with spaghetti flavor )
 def extract_from_eliminated(m :Matrix):
