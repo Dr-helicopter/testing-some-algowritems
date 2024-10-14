@@ -1,4 +1,4 @@
-from matrix import Matrix , solve_cramer_linear_system
+from matrix import Matrix , solve_cramer_linear_system, solve_gaussian_linear_system
 
 
 m = Matrix(
@@ -7,10 +7,8 @@ m = Matrix(
           [9, 5],
            )
 a = Matrix(
-    [4, 4, 5],
-          [7, 4, 5],
-          [3, 8, 1])
+    [3, 5, 7],
+          [1, 2, 3],
+          [-1, 3, 5])
 
-print(a)
-
-print(solve_cramer_linear_system(a,['x','y','z'],[3, 5 ,6]))
+print(a.rank())

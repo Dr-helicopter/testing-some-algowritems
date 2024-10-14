@@ -32,13 +32,13 @@ class Matrix:
 
 
     # print
-    def print(self):
+    def print(self) -> None:
         for i in self.args:
             for j in i:
                 print(f'{j : 6}', end='')
             print('')
 
-    def __str__(self):
+    def __str__(self) -> str:
         r = ''
         for i in self.args:
             for j in i:
@@ -132,9 +132,13 @@ class Matrix:
             a += m.determinant() * c
         return a
 
-
-
-
+    # rank
+    def rank(self) -> int:
+        a = row_esioln(self)
+        b = 0
+        for i in a.args:
+            if not is_zero(i): b += 1
+        return b
     @staticmethod
     def make_from_list(l: list):
         return Matrix(a for a in l)
@@ -152,7 +156,7 @@ def solve_gaussian_linear_system(multis : Matrix, vars: list, answers: list):
         raise ValueError('not enough' if multis.col < len(vars) else 'too many' + ' coefficient')
 
 
-    a = eliminate_system(multis.add_colum(answers).add_colum(vars))
+    a = row_esioln(multis.add_colum(answers).add_colum(vars))
 
     return extract_from_eliminated(a)
 
@@ -169,6 +173,13 @@ def solve_cramer_linear_system(multis : Matrix, vars: list, answers: list):
         a[vars[i]] = b
     return a
 
+
+
+
+
+
+
+
 # gaussian linear system utils (with spaghetti flavor )
 def extract_from_eliminated(m :Matrix):
     r = {}
@@ -181,8 +192,14 @@ def extract_from_eliminated(m :Matrix):
         if m.col == 0: break
         m = m.delete_colum(m.col - 3)
     return r
+# gaussian linear system utils end
 
-def eliminate_system(m : Matrix):
+
+
+
+
+# general utils
+def row_esioln(m : Matrix):
     if len(m.args) == 1: return m
 
     #format check
@@ -195,28 +212,25 @@ def eliminate_system(m : Matrix):
     if line_one is None: raise ValueError('unsolvable with Gaussian Elimination')
 
     for i in range(1, len(m.args)):
-        eliminate_row(m.args[i], line_one)
+        eliminate_line(m.args[i], line_one)
 
-    t = eliminate_system(m.delete_line(0).delete_colum(0))
+    t = row_esioln(m.delete_line(0).delete_colum(0))
 
     return add_zeros(t, line_one)
-
-def eliminate_row(l : list, ro : list):
-    p = float(l[0]) / ro[0]
-    for i in range(len(l)):
-        if type(l[i]) is str: continue
-
-        l[i] -= ro[i] * p
 
 def add_zeros(m : Matrix, lo : list):
     a = [lo]
     for i in m.args:
         a.append([0] + i)
     return Matrix.make_from_list(a)
-# gaussian linear system utils end
 
+def eliminate_line(l : list, ro : list):
+    p = float(l[0]) / ro[0]
+    for i in range(len(l)):
+        if type(l[i]) is str: continue
 
-# general utils
+        l[i] -= ro[i] * p
+
 def remove_from_list(l: list, i: int) -> list:
     r = deepcopy(l)
     r.pop(i)
@@ -226,4 +240,9 @@ def row_to_column_mapping(r : list, c : list) -> float:
     t = 0
     for a, b in zip(r, c): t += a * b
     return t
+
+def is_zero(l : list[float]) -> bool:
+    for i in l:
+        if i != 0: return False
+    return True
  # general utils end
