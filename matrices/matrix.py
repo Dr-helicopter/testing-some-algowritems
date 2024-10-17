@@ -1,6 +1,7 @@
 from argparse import ArgumentTypeError
 from copy import deepcopy
 from types import GeneratorType
+import chatGPTs_help
 
 
 class Matrix:
@@ -22,12 +23,13 @@ class Matrix:
 
 
     # getters
-    def get_line(self, i: int): return deepcopy(self.args[i])
+    def get_line(self, i: int) -> list: return deepcopy(self.args[i])
 
-    def get_colum(self, i: int): return deepcopy([a[i] for a in self.args])
+    def get_colum(self, i: int) -> list: return deepcopy([a[i] for a in self.args])
+
+    def get_diagonal(self) -> list: return list(self[i][i] for i in range(min(self.line,self.col)))
 
     __getitem__ = get_line
-
 
 
 
@@ -56,9 +58,7 @@ class Matrix:
 
     # oppor
     def multiply_by_number(self, n: float):
-        a = []
-        for i in self.args:
-            a.append([j * n for j in i])
+        a = [[j * n for j in i]for i in self.args]
         return Matrix.make_from_list(a)
 
     def multiply_by_matrix(self, m):
@@ -73,13 +73,29 @@ class Matrix:
             r.append(a)
         return Matrix.make_from_list(r)
 
+    def multiply_by_list(self, l : list[int, float]):
+        a = [[i] for i in l]
+        return self.multiply_by_matrix(Matrix.make_from_list(a)).get_colum(0)
+
+    def add(self, m):
+        if not type(m) is Matrix: raise ArgumentTypeError(f"matrix can only be added with other matrix. type of argument given:{str(type(m))}" )
+        if not m.line == self.line: raise ValueError("the number of lines must be equal")
+        if not m.col == self.col: raise ValueError("the number of columns must be equal")
+
+        a = [[self[i][j] + m[i][j] for j in range(self.col)] for i in range(self.line)]
+        return Matrix.make_from_list(a)
+
+    def sub(self, m): return self.add(m * -1)
 
 
     def __mul__(self, other):
         if type(other) is int: other = float(other)
         if type(other) is float: return self.multiply_by_number(other)
+        if type(other) is list: return self.multiply_by_list(other)
         if type(other) is Matrix: return self.multiply_by_matrix(other)
 
+    __add__ = add
+    __sub__ = sub
 
 
     # line and colum operators  ----start----
@@ -107,9 +123,11 @@ class Matrix:
         t[a] , t[b] = t[b] , t[a]
         return Matrix.make_from_list(t)
 
-    def swap_colum_with(self, index : int, new_col : list[float]):
+    def swap_colum_with(self, index : int, new_col : list):
+        if not is_vector(new_col): raise ArgumentTypeError("can only teke lists containing floats")
         if index > self.col: raise IndexError("out of bounds")
         if len(new_col) > self.line: raise IndexError("out of bounds")
+
         a = deepcopy(self.args)
         for i in range(len(self.args)):
             a[i][index] = new_col[i]
@@ -139,11 +157,17 @@ class Matrix:
         for i in a.args:
             if not is_zero(i): b += 1
         return b
+
+
+
     @staticmethod
     def make_from_list(l: list):
         return Matrix(a for a in l)
 
-
+    @staticmethod
+    def I(i : int):
+        a = [[0] * i + [1] for i in range(i)]
+        return Matrix.make_from_list(a)
 
 
 def solve_gaussian_linear_system(multis : Matrix, vars: list, answers: list):
@@ -154,7 +178,6 @@ def solve_gaussian_linear_system(multis : Matrix, vars: list, answers: list):
         raise ValueError('coefficient is not squer')
     if multis.col != len(vars):
         raise ValueError('not enough' if multis.col < len(vars) else 'too many' + ' coefficient')
-
 
     a = row_esioln(multis.add_colum(answers).add_colum(vars))
 
@@ -178,13 +201,35 @@ def solve_cramer_linear_system(multis : Matrix, vars: list, answers: list):
 
 
 
+# eigenvalues & eigenvectors
+def calculate_eigenvalues(m : Matrix) -> list:
+    return chatGPTs_help.calculate_eigenvalues(m.args)
 
 
-# gaussian linear system utils (with spaghetti flavor )
+def eigen_v(m : Matrix):
+    if not m.is_squer(): raise ValueError("the matrix must be squere")
+
+    r = {}
+    values = calculate_eigenvalues(m)
+    for v in values:
+        a = m - Matrix.I(m.line) * v
+        x = [str(i)for i in range(m.line)]
+        b = [0] * m.line
+
+        t = solve_gaussian_linear_system(a, x, b)
+        t = {k: v for k, v in sorted(t.items(), key=lambda item: int(item[0]), reverse=True)}
+        r[v] = [t[i] for i in t]
+    return r
+
+
+    # gaussian linear system utils (with spaghetti flavor )
 def extract_from_eliminated(m :Matrix):
     r = {}
     for _ in range(len(m.args)):
-        t = m.args[-1][-2]/m.args[-1][-3]
+        try:
+            t = m.args[-1][-2]/m.args[-1][-3]
+        except ZeroDivisionError:
+            t = 1
         r[m.args[-1][-1]] = t
         m = m.delete_line(m.line - 1)
         for i in m.args:
@@ -241,7 +286,12 @@ def row_to_column_mapping(r : list, c : list) -> float:
     for a, b in zip(r, c): t += a * b
     return t
 
-def is_zero(l : list[float]) -> bool:
+def is_vector(l : list) -> bool:
+    for i in l:
+        if not((type(i) is int)or(type(i) is float)): return False
+    return True
+
+def is_zero(l : list) -> bool:
     for i in l:
         if i != 0: return False
     return True
