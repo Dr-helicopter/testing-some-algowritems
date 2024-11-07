@@ -1,11 +1,13 @@
-from matrix import Matrix , solve_cramer_linear_system, solve_gaussian_linear_system, row_esioln, eigen_v
+from matrix import Matrix
+
 
 a = Matrix(
-    [3, 1],
-          [0, 2]
+    [1, 2, 3],
+          [5, 4, 0],
+          [1, 0, 6]
 )
 
+print(a.adjugate())
+print( a.inverse())
 
-print(eigen_v(a))
-
-print(a * [-1, 1])
+print(a * a.inverse())

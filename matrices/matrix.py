@@ -135,6 +135,8 @@ class Matrix:
         for i in range(len(self.args)):
             a[i][index] = new_col[i]
         return Matrix.make_from_list(a)
+
+    def minor(self, i, j): return self.delete_line(i).delete_colum(j)
     # line and colum operators  ----end-----
 
 
@@ -149,7 +151,7 @@ class Matrix:
         a = 0
         for i in range(0, self.col):
             c = line_one[i] * ((-1) ** (i % 2))
-            m = self.delete_line(0).delete_colum(i)
+            m = self.minor(0, i)
             a += m.determinant() * c
         return a
 
@@ -163,6 +165,19 @@ class Matrix:
 
 
 
+    # Adjugate
+    def cofactor(self, i, j) -> float:
+        return self.minor(i,j).determinant() * (-1)**((i+j)%2)
+
+    def adjugate(self):
+        a = [[self.cofactor(i , j) for j in range(self.col)]for i in range(self.line)]
+        return Matrix.make_from_list(a).T()
+
+
+    # Inverse
+    def inverse(self):
+        return self.adjugate() * (1 / self.determinant())
+
     @staticmethod
     def make_from_list(l: list):
         return Matrix(a for a in l)
@@ -171,6 +186,12 @@ class Matrix:
     def I(i : int):
         a = [[0] * i + [1] for i in range(i)]
         return Matrix.make_from_list(a)
+
+
+
+
+
+
 
 
 def solve_gaussian_linear_system(multis : Matrix, vars: list, answers: list):
