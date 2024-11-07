@@ -157,7 +157,7 @@ class Matrix:
 
     # rank
     def rank(self) -> int:
-        a = row_esioln(self)
+        a = row_echelon(self)
         b = 0
         for i in a.args:
             if not is_zero(i): b += 1
@@ -203,7 +203,7 @@ def solve_gaussian_linear_system(multis : Matrix, vars: list, answers: list):
     if multis.col != len(vars):
         raise ValueError('not enough' if multis.col < len(vars) else 'too many' + ' coefficient')
 
-    a = row_esioln(multis.add_colum(answers).add_colum(vars))
+    a = row_echelon(multis.add_colum(answers).add_colum(vars))
 
     return extract_from_eliminated(a)
 
@@ -268,7 +268,7 @@ def extract_from_eliminated(m :Matrix):
 
 
 # general utils
-def row_esioln(m : Matrix):
+def row_echelon(m : Matrix):
     if len(m.args) == 1: return m
 
     #format check
@@ -283,7 +283,7 @@ def row_esioln(m : Matrix):
     for i in range(1, len(m.args)):
         eliminate_line(m.args[i], line_one)
 
-    t = row_esioln(m.delete_line(0).delete_colum(0))
+    t = row_echelon(m.delete_line(0).delete_colum(0))
 
     return add_zeros(t, line_one)
 
