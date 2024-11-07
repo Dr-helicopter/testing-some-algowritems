@@ -87,6 +87,9 @@ class Matrix:
 
     def sub(self, m): return self.add(m * -1)
 
+    def T(self):
+        a = [self.get_colum(i) for i in range(self.col)]
+        return Matrix.make_from_list(a)
 
     def __mul__(self, other):
         if type(other) is int: other = float(other)
