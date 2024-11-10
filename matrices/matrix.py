@@ -51,10 +51,19 @@ class Matrix:
 
 
     # bool
-    def is_squer(self) -> bool:
-        return self.col == self.line
-
-
+    def is_square(self) -> bool: return self.col == self.line
+    def is_column(self) -> bool: return self.col == 1
+    def is_line(self) -> bool: return self.line == 1
+    def is_upper_triangular(self) -> bool:
+        if not self.is_square():return False
+        for i in range(self.line):
+            for j in range(i):
+                if 0 != self[i][j]: return False
+        return True
+    def is_lower_triangular(self) -> bool:
+        return self.T().is_upper_triangular()
+    def is_diagonal(self) -> bool:
+        return  self.is_lower_triangular() and self.is_upper_triangular()
 
     # oppor
     def multiply_by_number(self, n: float):
@@ -144,7 +153,7 @@ class Matrix:
 
     # determinant
     def determinant(self) -> float:
-        if not self.is_squer(): return 0
+        if not self.is_square(): return 0
         line_one = self.get_line(0)
         if len(line_one) == 1: return line_one[0]
 
@@ -198,8 +207,8 @@ def solve_gaussian_linear_system(multis : Matrix, vars: list, answers: list):
     # checking
     if len(vars) != len(answers):
         raise ValueError('too many ' +'variables' if len(vars) > len(answers) else 'answers')
-    if not multis.is_squer():
-        raise ValueError('coefficient is not squer')
+    if not multis.is_square():
+        raise ValueError('coefficient is not square')
     if multis.col != len(vars):
         raise ValueError('not enough' if multis.col < len(vars) else 'too many' + ' coefficient')
 
@@ -211,8 +220,8 @@ def solve_cramer_linear_system(multis : Matrix, vars: list, answers: list):
     # checking
     if len(vars) != len(answers):
         raise ValueError('too many ' + 'variables' if len(vars) > len(answers) else 'answers')
-    if not multis.is_squer():
-        raise ValueError('coefficient is not squer')
+    if not multis.is_square():
+        raise ValueError('coefficient is not square')
 
     a = {}
     for i in range(len(answers)):
@@ -231,7 +240,7 @@ def calculate_eigenvalues(m : Matrix) -> list:
 
 
 def eigen_v(m : Matrix):
-    if not m.is_squer(): raise ValueError("the matrix must be squere")
+    if not m.is_square(): raise ValueError("the matrix must be square")
 
     r = {}
     values = calculate_eigenvalues(m)
@@ -247,6 +256,9 @@ def eigen_v(m : Matrix):
 
 
     # gaussian linear system utils (with spaghetti flavor )
+
+
+# gaussian linear system utils end
 def extract_from_eliminated(m :Matrix):
     r = {}
     for _ in range(len(m.args)):
@@ -261,7 +273,6 @@ def extract_from_eliminated(m :Matrix):
         if m.col == 0: break
         m = m.delete_colum(m.col - 3)
     return r
-# gaussian linear system utils end
 
 
 
@@ -301,9 +312,7 @@ def eliminate_line(l : list, ro : list):
         l[i] -= ro[i] * p
 
 def remove_from_list(l: list, i: int) -> list:
-    r = deepcopy(l)
-    r.pop(i)
-    return r
+    return deepcopy(l).pop(i)
 
 def row_to_column_mapping(r : list, c : list) -> float:
     t = 0
