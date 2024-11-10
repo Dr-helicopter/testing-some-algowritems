@@ -230,9 +230,26 @@ def solve_cramer_linear_system(multis : Matrix, vars: list, answers: list):
     return a
 
 
+def is_linear_dependent(l1 : list, l2 : list) -> bool:
+    if len(l1) != len(l2): raise ValueError(f'the list must be the same length entered lists:\n{l1}\n{l2}')
+    if len(l1) == 0: raise  ValueError('lists cannot be empty')
 
+    try:
+        a = l1[0]/l2[0]
+    except ZeroDivisionError:
+        return is_linear_dependent(l1[1:], l2[1:])
+    b = []
+    for i in range(len(l1)):
+        b.append(l2[i]*a - l1[i])
+    return is_zero(b)
 
-
+def multi_is_linear_dependent(*args):
+    for i in range(len(args)):
+        for j in range(i):
+            if is_linear_dependent(args[i], args[j]):
+                print(f'list:\n{args[i]}\n{args[j]}\n are dependent')
+                return
+    print("no dependence")
 
 # eigenvalues & eigenvectors
 def calculate_eigenvalues(m : Matrix) -> list:

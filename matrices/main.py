@@ -1,4 +1,4 @@
-from matrix import Matrix
+from matrix import Matrix , multi_is_linear_dependent
 
 
 a = Matrix(
@@ -7,5 +7,9 @@ a = Matrix(
         [0, 0, 6, 6],
         [0 ,0 ,0 ,7]
 )
+a = [1,1,1]
+b = [1,1,-1]
+c = [2,2,2]
 
-print(a.is_upper_triangular())
+
+multi_is_linear_dependent(a,b,c)
