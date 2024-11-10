@@ -275,6 +275,16 @@ def eigen_v(m : Matrix):
     # gaussian linear system utils (with spaghetti flavor )
 
 
+def sign_determining(m : Matrix):
+    values = calculate_eigenvalues(m)
+    pos = values[0] > 0
+    for i in values:
+        if (i > 0 and i != 0) != pos:
+            return None
+    return pos
+
+
+
 # gaussian linear system utils end
 def extract_from_eliminated(m :Matrix):
     r = {}
