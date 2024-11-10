@@ -1,16 +1,9 @@
+from matrices.Vectors import Vector3
 from matrix import Matrix , multi_is_linear_dependent
+from R3 import Line
 
 
-a = Matrix(
-    [1, 2, 3 , 4],
-        [0, 4, 0, 5],
-        [0, 0, 6, 6],
-        [0 ,0 ,0 ,7]
-)
-a = [1,1,1]
-b = [1,1,-1]
-c = [2,2,2]
+a = Line(Vector3(1 ,-2 ,1), Vector3(1 ,2 ,3))
+b = Line(Vector3(2 ,-4 ,2 ),Vector3(4 , 5, 6))
 
-
-
-multi_is_linear_dependent(a,b,c)
+print(a.is_coplanar_with_line(b))

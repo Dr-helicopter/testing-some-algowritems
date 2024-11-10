@@ -106,6 +106,8 @@ class Matrix:
         if type(other) is list: return self.multiply_by_list(other)
         if type(other) is Matrix: return self.multiply_by_matrix(other)
 
+    def __neg__(self): return self.multiply_by_number(-1)
+
     __add__ = add
     __sub__ = sub
 
@@ -160,7 +162,7 @@ class Matrix:
         a = 0
         for i in range(0, self.col):
             c = line_one[i] * ((-1) ** (i % 2))
-            m = self.minor(0, i)
+            m = self.minor(0 ,i)
             a += m.determinant() * c
         return a
 
@@ -176,6 +178,7 @@ class Matrix:
 
     # Adjugate
     def cofactor(self, i, j) -> float:
+        print(self.minor(i,j))
         return self.minor(i,j).determinant() * (-1)**((i+j)%2)
 
     def adjugate(self):
@@ -339,7 +342,9 @@ def eliminate_line(l : list, ro : list):
         l[i] -= ro[i] * p
 
 def remove_from_list(l: list, i: int) -> list:
-    return deepcopy(l).pop(i)
+    a = deepcopy(l)
+    a.pop(i)
+    return a
 
 def row_to_column_mapping(r : list, c : list) -> float:
     t = 0
