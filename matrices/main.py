@@ -12,4 +12,5 @@ b = [1,1,-1]
 c = [2,2,2]
 
 
+
 multi_is_linear_dependent(a,b,c)
