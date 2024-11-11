@@ -86,6 +86,14 @@ class Matrix:
         a = [[i] for i in l]
         return self.multiply_by_matrix(Matrix.make_from_list(a)).get_colum(0)
 
+    def mul(self, other):
+        if type(other) is int: other = float(other)
+        if type(other) is float: return self.multiply_by_number(other)
+        if type(other) is list: return self.multiply_by_list(other)
+        if type(other) is Matrix: return self.multiply_by_matrix(other)
+
+    def neg(self): return self.multiply_by_number(-1)
+
     def add(self, m):
         if not type(m) is Matrix: raise ArgumentTypeError(f"matrix can only be added with other matrix. type of argument given:{str(type(m))}" )
         if not m.line == self.line: raise ValueError("the number of lines must be equal")
@@ -100,14 +108,9 @@ class Matrix:
         a = [self.get_colum(i) for i in range(self.col)]
         return Matrix.make_from_list(a)
 
-    def __mul__(self, other):
-        if type(other) is int: other = float(other)
-        if type(other) is float: return self.multiply_by_number(other)
-        if type(other) is list: return self.multiply_by_list(other)
-        if type(other) is Matrix: return self.multiply_by_matrix(other)
 
-    def __neg__(self): return self.multiply_by_number(-1)
-
+    __mul__ = mul
+    __neg__ = neg
     __add__ = add
     __sub__ = sub
 
