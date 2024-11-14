@@ -53,7 +53,7 @@ class Matrix:
     # bool
     def is_square(self) -> bool: return self.col == self.line
     def is_column(self) -> bool: return self.col == 1
-    def is_line(self) -> bool: return self.line == 1
+    def is_row(self) -> bool: return self.line == 1
     def is_upper_triangular(self) -> bool:
         if not self.is_square():return False
         for i in range(self.line):
@@ -120,7 +120,7 @@ class Matrix:
         if i < 0 or i > self.line: raise IndexError("out of bounds")
         return Matrix.make_from_list(remove_from_list(self.args, i))
 
-    def delete_colum(self, i):
+    def delete_column(self, i):
         if i < 0 or i > self.col: raise IndexError("out of bounds")
         return Matrix(remove_from_list(a, i) for a in self.args)
 
@@ -150,7 +150,7 @@ class Matrix:
             a[i][index] = new_col[i]
         return Matrix.make_from_list(a)
 
-    def minor(self, i, j): return self.delete_line(i).delete_colum(j)
+    def minor(self, i, j): return self.delete_line(i).delete_column(j)
     # line and colum operators  ----end-----
 
 
@@ -304,7 +304,7 @@ def extract_from_eliminated(m :Matrix):
         for i in m.args:
             i[-2] -= i[-3] * t
         if m.col == 0: break
-        m = m.delete_colum(m.col - 3)
+        m = m.delete_column(m.col - 3)
     return r
 
 
@@ -327,7 +327,7 @@ def row_echelon(m : Matrix):
     for i in range(1, len(m.args)):
         eliminate_line(m.args[i], line_one)
 
-    t = row_echelon(m.delete_line(0).delete_colum(0))
+    t = row_echelon(m.delete_line(0).delete_column(0))
 
     return add_zeros(t, line_one)
 

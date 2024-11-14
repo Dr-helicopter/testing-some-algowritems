@@ -1,5 +1,5 @@
+from matrix import is_linear_dependent, Matrix
 import math
-from matrices.matrix import is_linear_dependent, Matrix
 
 
 class Vector3:
@@ -94,8 +94,11 @@ class Vector3:
     # -----casting end -----
 
 
+    def normalize(self):
+        a = self.size()
+        return self.divide_by_number(a) if a else Vector3.zero
 
-    def normalize(self): return self.divide_by_number(self.size())
+    def distance_to(self, other): return (self - other).size()
 
 
     def is_linear_dependent_to(self, other) -> bool:
@@ -112,3 +115,14 @@ class Vector3:
 
     def dot_product(self, other):
         return self.x * other.x + self.y * other.y + self.z * other.z
+
+
+
+
+Vector3.zero = Vector3(0,0,0)
+Vector3.left = Vector3(-1,0,0)
+Vector3.right = Vector3(1,0,0)
+Vector3.up = Vector3(0,1,0)
+Vector3.down = Vector3(0,-1,0)
+Vector3.forward = Vector3(0,0,1)
+Vector3.backward = Vector3(0,0,-1)
