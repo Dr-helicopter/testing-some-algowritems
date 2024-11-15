@@ -1,4 +1,4 @@
-from matrices.Vectors import Vector3
+from Vectors import Vector3
 
 
 class Line:
