@@ -6,11 +6,15 @@ class expression(ABC):
     def represent(self) -> str: pass
 
     @abstractmethod
-    def simplify(self) -> None: pass
+    def copy(self): pass
 
-    def __str__(self):return self.represent()
+    def __str__(self): return self.represent()
 
-
+    def add(self, other):
+        if isinstance(other, const): return other.add(self)
+        return addition(self, other)
+    __add__ = add
+    __radd__ = add
 
 class const(expression):
     def __init__(self,value):
@@ -63,17 +67,39 @@ class const(expression):
         if isinstance(other, const): return const(other.value + self.value)
         return addition(other, self)
 
+
+
+    def pow(self, other) -> expression:
+        if not isinstance(other, expression): other = turn_to_expression(other)
+        if isinstance(other, const): return const(self.value ** other.value)
+        return power(self, other)
+
     __add__ = add
     __radd__ = add
+    __pow__ = pow
+
+
 
     def represent(self) -> str: return str(self.value)
+
+    def copy(self):return self
 
     def simplify(self) -> None: pass
 
 
 class variable(expression):
+
+
+    def copy(self):return self
+
     def __init__(self, name : str):
         self.name : str = name
+
+    def eq(self, other) -> bool:
+        if type(other) == str: return self.name == other
+        if type(other) == variable: return self.name == other.name
+        return False
+    __eq__ = eq
 
     def represent(self) -> str:
         return self.name
@@ -89,7 +115,7 @@ def turn_to_expression(a) -> expression:
 
 
 class addition(expression):
-    def __init__(self, a, b, *args,restructure=True):
+    def __init__(self, a, b, *args, restructure=True):
         if len(args):
             args += (a, b,)
             c, e = [], []
@@ -115,7 +141,7 @@ class addition(expression):
         else: res.append(self.b)
         return res
 
-    def simplify(self):  # !! danger zone !! careful with recursion here
+    def simplify(self): # !! danger zone !! careful with recursion here
         if self.a == 0:
             self.__class__ = type(self.b)
             self.__dict__ = self.b.__dict__
@@ -127,10 +153,8 @@ class addition(expression):
 
 
         if isinstance(self.a, const) and isinstance(self.b, const):
-            a = self.a.value
-            b = self.b.value
             self.__class__ = const
-            const.__init__(self, a + b)
+            const.__init__(self, self.a.value + self.b.value)
             return
 
 
@@ -138,3 +162,41 @@ class addition(expression):
         a = self.a.represent() if type(self.a) == addition else f'({self.a.represent()})'
         b = self.b.represent() if type(self.b) == addition else f'({self.b.represent()})'
         return f'{a} +{b}'
+
+
+    def copy(self):return addition(self.a, self.b, restructure=False)
+
+
+class multiplication(expression):
+    def __init__(self):pass
+
+    def represent(self) -> str:
+        pass
+
+    def copy(self):pass
+
+class power(expression):
+    def __init__(self,a , b):
+        self.a : expression = a if isinstance(a, expression) else turn_to_expression(a)
+        self.b : expression = b if isinstance(b ,expression) else turn_to_expression(b)
+        self.simplify()
+
+
+    def simplify(self):
+        if isinstance(self.b, const):
+            if self.b == 0:
+                t = const(1)
+                self.__class__ = const
+                self.__dict__ = t.__dict__
+                return
+            if self.b == 1:
+                self.__class__ = type(self.a)
+                self.__dict__ = self.a.__dict__
+                return
+            if isinstance(self.a, const):
+                self.__class__ = const
+                const.__init__(self, self.a.value ** self.b.value)
+    def represent(self) -> str:
+        return f'({self.a})^({self.b})'
+
+    def copy(self): return power(self.a, self.b)
