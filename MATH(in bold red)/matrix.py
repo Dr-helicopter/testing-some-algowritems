@@ -255,6 +255,10 @@ def multi_is_linear_dependent(*args):
             if is_linear_dependent(args[i], args[j]):
                 print(f'list:\n{args[i]}\n{args[j]}\n are dependent')
                 return
+    a = Matrix(*args)
+    if a.rank() != a.line:
+        print("dependent")
+        return
     print("no dependence")
 
 # eigenvalues & eigenvectors

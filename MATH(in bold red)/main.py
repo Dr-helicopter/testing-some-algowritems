@@ -1,12 +1,9 @@
 from Vectors import Vector3
 from R3 import Line
 from plot import Plot3D as plt
+from matrix import Matrix , multi_is_linear_dependent, row_echelon
 
-a = Line(Vector3(1 ,-2 ,1), Vector3(1 ,2 ,3))
-b = Line(Vector3(2 ,-4 ,2 ),Vector3(4 , 5, 6))
-c = Vector3(3, 2, 1)
+a = Matrix([1,2,4], [3,2,1], [1,-2,-5])
+print(row_echelon(a))
 
-plt.plot_point(c)
-
-
-print(a.is_coplanar_with_line(b))
+multi_is_linear_dependent([0,1,1], [1,0,1], [1,1,2])
