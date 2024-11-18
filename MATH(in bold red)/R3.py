@@ -25,7 +25,6 @@ class Line:
 
     def is_coplanar_with_line(self, other):
         if type(other) != Line: raise ValueError
-
         return (self.disposition - other.disposition).dot_product(self.direction.x_product(other.direction)) == 0
 
     def status_to_line(self, other):

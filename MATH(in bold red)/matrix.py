@@ -181,7 +181,6 @@ class Matrix:
 
     # Adjugate
     def cofactor(self, i, j) -> float:
-        print(self.minor(i,j))
         return self.minor(i,j).determinant() * (-1)**((i+j)%2)
 
     def adjugate(self):
