@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from copy import deepcopy
+from math import e
+
 
 
 class expression(ABC):
@@ -21,12 +24,22 @@ class expression(ABC):
         if isinstance(other, const): return other.add(self)
         return addition(self, other)
 
+    def mul(self, other):
+        if isinstance(other, const): return other.add(self)
+        return multiplication(self, other)
+
     def pow(self, other):
         return power(self, other)
 
     __add__ = add
     __radd__ = add
+    __mul__ = mul
+    __rmul__ = mul
 
+    def mutate(self, other):
+        if not isinstance(other, expression): other = turn_to_expression(other)
+        self.__class__ = other.__class__
+        self.__dict__ = deepcopy(other.__dict__)
 
 class const(expression):
     def __init__(self, value):
@@ -38,72 +51,72 @@ class const(expression):
         if not isinstance(other, expression): other = turn_to_expression(other)
         if not isinstance(other, const): return False
         return self.value == other.value
-
     def lt(self, other) -> bool:
         if not isinstance(other, expression): other = turn_to_expression(other)
         if not isinstance(other, const): raise ValueError("Only constants.")
         return self.value < other.value
-
     def gt(self, other) -> bool:
         if not isinstance(other, expression): other = turn_to_expression(other)
         if not isinstance(other, const): raise ValueError("Only constants.")
         return self.value > other.value
-
     def le(self, other) -> bool:
         if not isinstance(other, expression): other = turn_to_expression(other)
         if not isinstance(other, const): raise ValueError("Only constants.")
         return self.value <= other.value
-
     def ge(self, other) -> bool:
         if not isinstance(other, expression): other = turn_to_expression(other)
         if not isinstance(other, const): raise ValueError("Only constants.")
         return self.value >= other.value
 
-    __eq__ = eq
     __lt__ = lt
     __gt__ = gt
     __le__ = le
-
     # boolean ops -----end-----
 
     #  casting ---start---
-    def bool(self) -> bool:
-        return bool(self.value)
-
-    def int(self) -> int:
-        return int(self.value)
-
-    def float(self) -> float:
-        return float(self.value)
-
+    def bool(self) -> bool: return bool(self.value)
+    def int(self) -> int: return int(self.value)
+    def float(self) -> float: return float(self.value)
     __bool__ = bool
     __int__ = int
     __float__ = float
-
     #  casting ---end ---
 
+
+
+    # operations --- start ----
     def add(self, other) -> expression:
         if not isinstance(other, expression): other = turn_to_expression(other)
         if isinstance(other, const): return const(other.value + self.value)
         return addition(other, self)
+
+    def mul(self, other) -> expression:
+        if not isinstance(other, expression): other = turn_to_expression(other)
+        if isinstance(other, const): return const(self.value * other.value)
+        return multiplication(self, other)
+
+    def neg(self): return const(-self.value)
 
     def pow(self, other) -> expression:
         if not isinstance(other, expression): other = turn_to_expression(other)
         if isinstance(other, const): return const(self.value ** other.value)
         return power(self, other)
 
+
     __add__ = add
     __radd__ = add
+    __mul__ = mul
+    __rmul__ = mul
+    __neg__ = neg
     __pow__ = pow
+    # operations ----end -----
 
-    def represent(self) -> str:
-        return str(self.value)
 
-    def copy(self):
-        return self
-
-    def simplify(self) -> None:
-        pass
+    def is_negative(self): return self.value < 0
+    def represent(self) -> str: return str(self.value)
+    def copy(self): return self
+    def simplify(self) -> None: pass
+c0 = const(0)
 
 
 class variable(expression):
@@ -115,14 +128,9 @@ class variable(expression):
         if type(other) == variable: return self.name == other.name
         return False
 
-    def copy(self):
-        return self
-
-    def represent(self) -> str:
-        return self.name
-
-    def simplify(self) -> None:
-        pass
+    def copy(self): return self
+    def represent(self) -> str: return self.name
+    def simplify(self) -> None: pass
 
 
 def turn_to_expression(a) -> expression:
@@ -150,10 +158,15 @@ class addition(expression):
         self.b: expression = b if isinstance(b, expression) else turn_to_expression(b)
         self.simplify()
 
-    def eq(self, other):
-        if isinstance(self, other): return False
-        self = self._flatten()
-        other = other._flatter()
+    def eq(self, other) -> bool:
+        if not isinstance(other, addition): return False
+        s = self._flatten()
+        o = other._flatten()
+        if len(o) != len(s): return False
+        for i in s:
+            if not all(j != i for j in o): continue
+            return False
+        return True
 
     def _flatten(self):
         res = []
@@ -167,32 +180,27 @@ class addition(expression):
             res.append(self.b)
         return res
 
-    def simplify(self):  # !! danger zone !! careful with recursion here
-        if self.a == 0:
-            self.__class__ = type(self.b)
-            self.__dict__ = self.b.__dict__
-            return
-        if self.b == 0:
-            self.__class__ = type(self.a)
-            self.__dict__ = self.a.__dict__
-            return
+    def simplify(self): # !! danger zone !! careful with recursion here
+        if self.a == c0:
+            self.mutate(self.b)
+        elif self.b == c0:
+            self.mutate(self.a)
+        elif isinstance(self.a, const) and isinstance(self.b, const):
+            self.mutate(const(self.a.value + self.b.value))
 
-        if isinstance(self.a, const) and isinstance(self.b, const):
-            self.__class__ = const
-            const.__init__(self, self.a.value + self.b.value)
-            return
+
+
 
     def represent(self) -> str:
         a = self.a.represent() if type(self.a) == addition else f'({self.a.represent()})'
         b = self.b.represent() if type(self.b) == addition else f'({self.b.represent()})'
         return f'{a} +{b}'
 
-    def copy(self):
-        return addition(self.a, self.b, restructure=False)
+    def copy(self): return addition(self.a, self.b, restructure=False)
 
 
 class multiplication(expression):
-    def __init__(self, a, b):
+    def __init__(self, a, b, restructure=True):
         self.a: expression = a if isinstance(a, expression) else turn_to_expression(a)
         self.b: expression = b if isinstance(b, expression) else turn_to_expression(b)
         self.simplify()
@@ -202,6 +210,11 @@ class multiplication(expression):
         s = self._flatten()
         if len(s) != 2: #we got multiple
             o = other._flatten()
+            if len(o) != len(s): return False
+            for i in s:
+                if not all(j != i for j in o):continue
+                return False
+            return True
 
 
 
@@ -217,21 +230,35 @@ class multiplication(expression):
             res.append(self.b)
         return res
 
-    def simplify(self):
-        pass
+    def get_const(self) -> const:
+        f, c = self._flatten(), const(1)
+        for i in f:
+            if isinstance(i , const):
+                print(c, i)
+                c *= i if isinstance(i, const) else 1
+                print(c, i)
+        return c
 
+    def simplify(self):
+        if self.a == c0 or self.b == c0:
+            self.mutate(c0)
+        elif isinstance(self.a, const) and isinstance(self.a, const):
+            self.mutate(const(self.a.value * self.a.value))
+        else:
+            f = self._flatten()
     def represent(self) -> str:
         return f'({self.a})({self.b})'
 
-    def copy(self):
-        pass
+    def copy(self): return multiplication(self.a, self.b, restructure=False)
+
+class division(multiplication):
+    pass
 
 
 class power(expression):
-    @abstractmethod
     def get_component(self) -> expression: return self.b
-    @abstractmethod
     def get_exponent(self) -> expression: return self.a
+    
 
     def __init__(self, a, b):
         self.a: expression = a if isinstance(a, expression) else turn_to_expression(a)
@@ -245,19 +272,27 @@ class power(expression):
         return True
 
     def simplify(self):
+        if self.a == c0:
+            if self.b == c0: raise ValueError("0^0 is undefined.")
+            return self.mutate(c0)
+
+        if isinstance(self.a, power):
+            self.mutate(power(self.a.a, self.a.b * self.b))
+
+
         if isinstance(self.b, const):
-            if self.b == 0:
-                t = const(1)
-                self.__class__ = const
-                self.__dict__ = t.__dict__
-                return
-            if self.b == 1:
-                self.__class__ = type(self.a)
-                self.__dict__ = self.a.__dict__
-                return
+            if self.b == c0: self.mutate(const(1))
+            elif self.b == 1: self.mutate(self.a)
+            elif isinstance(self.a, const): self.mutate(const(self.a.value ** self.b.value))
+            elif self.b.is_negative(): self.mutate(power(division(1, self.a), -self.b))
+            return
+
+
+        if isinstance(self.b, multiplication):
             if isinstance(self.a, const):
-                self.__class__ = const
-                const.__init__(self, self.a.value ** self.b.value)
+                self.a = const(self.a.value ** self.b.get_const().value)
+                self.b = division(self.b, self.b.get_const())
+
 
     def represent(self) -> str:
         return f'({self.a})^({self.b})'

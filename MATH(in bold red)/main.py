@@ -7,3 +7,7 @@ a = Matrix([1,2,4], [3,2,1], [1,-2,-5])
 print(row_echelon(a))
 
 multi_is_linear_dependent([0,1,1], [1,0,1], [1,1,2])
+
+b = Vector3(4, 5, 9)
+
+plt.plot_point(b)
